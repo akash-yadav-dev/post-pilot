@@ -2,18 +2,18 @@ package bootstrap
 
 import (
 	"post-pilot/apps/api/internal/config"
-	"post-pilot/packages/database"
+	"post-pilot/packages/database/postgres"
 )
 
 type Container struct {
-	DB     *database.DB
+	DB     *postgres.DB
 	Router *Router
 	Logger Logger
 	Config *config.Config
 }
 
 func NewContainer(logger Logger, cfg *config.Config) (*Container, error) {
-	db, err := database.NewDB(cfg.DBName, cfg.DBUser, cfg.DBPassword)
+	db, err := postgres.NewPostgresDB()
 	if err != nil {
 		return nil, err
 	}
