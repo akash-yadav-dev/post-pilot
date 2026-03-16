@@ -1,0 +1,1 @@
+-- Down migration intentionally left empty to protect core data table. Do not drop core tables in production.
