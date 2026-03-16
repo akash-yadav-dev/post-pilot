@@ -55,7 +55,14 @@ jobs:
           name: coverage
           path: coverage.out
 
-      - name: Build Application
+      - name: Build Binaries
         run: |
           mkdir -p build
-          go build -v -o build/app ./...
+          go build -v -o build/api ./apps/api/cmd/server
+          go build -v -o build/worker ./apps/worker/cmd/worker
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: build/
