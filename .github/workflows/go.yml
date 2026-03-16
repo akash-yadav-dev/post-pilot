@@ -21,7 +21,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: go.work
           cache: true
 
       - name: Verify Go modules
@@ -36,10 +36,7 @@ jobs:
         run: go vet ./...
 
       - name: Run Linter
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.60.3
-          args: ./...
+        run: bash ./scripts/lint.sh
 
       - name: Security Scan (gosec)
         run: |
