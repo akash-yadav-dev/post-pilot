@@ -1,7 +1,15 @@
-package server
+package main
 
-import "fmt"
+import (
+	"log"
+	"post-pilot/apps/api/cmd/server/bootstrap"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+
+	app, err := bootstrap.NewApp()
+	if err != nil {
+		log.Fatalf("Error initializing app: %v", err)
+	}
+	app.Start()
 }
