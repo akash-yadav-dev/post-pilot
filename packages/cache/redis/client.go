@@ -3,9 +3,13 @@ package redis
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -51,8 +55,15 @@ func NewRedisClient() (*Client, error) {
 		MaxRetries:      getEnvAsInt("REDIS_MAX_RETRIES", 3),
 		MinRetryBackoff: getEnvAsDuration("REDIS_MIN_RETRY_BACKOFF", 100*time.Millisecond),
 		MaxRetryBackoff: getEnvAsDuration("REDIS_MAX_RETRY_BACKOFF", 2*time.Second),
-		TLSConfig:       redisTLSConfig(),
+		TLSConfig:       nil,
 	}
+
+	tlsConfig, err := redisTLSConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.TLSConfig = tlsConfig
 
 	return NewClient(cfg)
 }
@@ -163,13 +174,47 @@ func getEnvAsBool(key string, fallback bool) bool {
 	return fallback
 }
 
-func redisTLSConfig() *tls.Config {
+func redisTLSConfig() (*tls.Config, error) {
 	if !getEnvAsBool("REDIS_TLS_ENABLED", false) {
-		return nil
+		return nil, nil
 	}
 
-	return &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: getEnvAsBool("REDIS_TLS_INSECURE_SKIP_VERIFY", false),
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
 	}
+
+	if caFile := strings.TrimSpace(getEnv("REDIS_TLS_CA_FILE", "")); caFile != "" {
+		caDir := strings.TrimSpace(getEnv("REDIS_TLS_CA_DIR", "."))
+
+		root, err := os.OpenRoot(caDir)
+		if err != nil {
+			return nil, fmt.Errorf("open redis tls ca root: %w", err)
+		}
+		defer root.Close()
+
+		caFile = filepath.Clean(caFile)
+		caReader, err := root.Open(caFile)
+		if err != nil {
+			return nil, fmt.Errorf("open redis tls ca file: %w", err)
+		}
+		defer caReader.Close()
+
+		caCert, err := io.ReadAll(caReader)
+		if err != nil {
+			return nil, fmt.Errorf("read redis tls ca file: %w", err)
+		}
+
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("invalid redis tls ca file: %s", caFile)
+		}
+
+		tlsConfig.RootCAs = pool
+	}
+
+	if serverName := strings.TrimSpace(getEnv("REDIS_TLS_SERVER_NAME", "")); serverName != "" {
+		tlsConfig.ServerName = serverName
+	}
+
+	return tlsConfig, nil
 }
