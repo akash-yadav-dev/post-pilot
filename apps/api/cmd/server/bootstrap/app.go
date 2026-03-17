@@ -33,7 +33,10 @@ func NewApp() (*App, error) {
 		return nil, fmt.Errorf("failed to create container: %w", err)
 	}
 
-	router := SetupRouter(container)
+	router, err := SetupRouter(container)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup router: %w", err)
+	}
 
 	return &App{
 		Container: container,

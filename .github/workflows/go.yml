@@ -1,17 +1,21 @@
-name: Go CI
+name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: [main, develop]
   pull_request:
-    branches: ["main", "develop"]
+    branches: [main, develop]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
-    name: Build & Test
+  backend:
+    name: Go Backend
     runs-on: ubuntu-latest
 
     steps:
@@ -21,16 +25,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.work
+          go-version: 1.26.1
           cache: true
 
       - name: Verify Go modules
         run: |
           go mod tidy
           git diff --exit-code go.mod go.sum
-
-      - name: Download dependencies
-        run: go mod download
 
       - name: Run go vet
         run: go vet ./...
@@ -41,7 +42,12 @@ jobs:
       - name: Security Scan (gosec)
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+          gosec ./apps/... ./packages/...
+
+      - name: Dependency Vulnerability Scan
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
 
       - name: Run Tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -63,3 +69,33 @@ jobs:
         with:
           name: binaries
           path: build/
+
+  frontend:
+    name: Web Frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Build Frontend
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+        run: npm run build

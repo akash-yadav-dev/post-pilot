@@ -7,7 +7,6 @@ import (
 
 type Container struct {
 	DB     *postgres.DB
-	Router *Router
 	Logger Logger
 	Config *config.Config
 }

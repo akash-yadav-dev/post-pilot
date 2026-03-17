@@ -1,1 +1,2 @@
--- Down migration intentionally left empty to protect core data table. Do not drop core tables in production.
+DROP TABLE IF EXISTS analytics_events;
+DROP TYPE IF EXISTS analytics_event_type;
