@@ -11,12 +11,19 @@ permissions:
 
 jobs:
   ci:
-    name: Build & Test
+    name: Build, Test & Verify Frontend
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -31,6 +38,20 @@ jobs:
 
       - name: Download dependencies
         run: go mod download
+
+      - name: Install Frontend Dependencies
+        working-directory: ./apps/web
+        run: npm ci
+
+      - name: Run Frontend Lint
+        working-directory: ./apps/web
+        run: npm run lint
+
+      - name: Verify Frontend Build
+        working-directory: ./apps/web
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+        run: npm run build
 
       - name: Run go vet
         run: go vet ./...

@@ -1,1 +1,2 @@
--- Down migration intentionally left empty to protect core data table. Do not drop core tables in production.
+DROP TRIGGER IF EXISTS trg_scheduler_locks_updated_at ON scheduler_locks;
+DROP TABLE IF EXISTS scheduler_locks;
