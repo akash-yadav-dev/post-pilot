@@ -17,11 +17,34 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+  }) {
+  const initialThemeScript = `(function() {
+        try {
+          const key = "postpilot-theme";
+          const stored = localStorage.getItem(key);
+          const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const theme = stored || (systemDark ? "dark" : "light");
+
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })()`;
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* ✅ Prevent hydration mismatch + theme flicker */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: initialThemeScript,
+          }}
+        />
+      </head>
+
       <body className={`${spaceGrotesk.variable} antialiased`}>
         <ThemeProvider>
           <div className="min-h-screen bg-[var(--bg)] text-[var(--primary)]">

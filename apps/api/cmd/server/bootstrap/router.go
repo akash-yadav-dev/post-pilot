@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"post-pilot/apps/api/internal/auth"
 	"post-pilot/apps/api/internal/middleware"
+	"post-pilot/apps/api/internal/posts"
+	"post-pilot/apps/api/internal/users"
 	"post-pilot/apps/api/routes"
 	rediscache "post-pilot/packages/cache/redis"
 	"time"
@@ -42,7 +44,12 @@ func SetupRouter(container *Container) (*gin.Engine, error) {
 		return nil, fmt.Errorf("setup auth module: %w", err)
 	}
 
+	usersModule := users.NewModule(container.DB.DB)
+	postsModule := posts.NewModule(container.DB.DB)
+
 	routes.SetupAuthRouter(router, authModule)
+	routes.SetupUserRouter(router, usersModule, authModule.AuthRequired)
+	routes.SetupPostRouter(router, postsModule, authModule.AuthRequired)
 
 	return router, nil
 }
