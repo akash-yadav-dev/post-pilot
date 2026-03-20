@@ -21,15 +21,35 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--bg)]/85 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="group flex items-center gap-2">
-          <span className="inline-block h-7 w-7 rotate-45 rounded-md bg-[var(--primary)] transition group-hover:rotate-[225deg]" />
-          <span className="text-lg font-semibold tracking-tight text-[var(--primary)]">PostPilot</span>
+          <span className="group inline-flex items-center justify-center h-7 w-7 rotate-45 rounded-md bg-[var(--icon-bg)] transition-transform duration-300 ease-in-out group-hover:rotate-[405deg]">
+            <span className="-rotate-45 text-[var(--icon-text)] text-sm font-semibold">
+              P
+            </span>
+          </span>
+          <span className="text-lg font-semibold tracking-tight text-[var(--primary)] ps-1">
+            PostPilot
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-2 md:flex">
-          <Link href="/" className={linkClass("/")}>Home</Link>
-          {authenticated && <Link href="/dashboard" className={linkClass("/dashboard")}>Dashboard</Link>}
-          {!authenticated && <Link href="/login" className={linkClass("/login")}>Login</Link>}
-          {!authenticated && <Link href="/signin" className={linkClass("/signin")}>Sign Up</Link>}
+          <Link href="/" className={linkClass("/")}>
+            Home
+          </Link>
+          {authenticated && (
+            <Link href="/dashboard" className={linkClass("/dashboard")}>
+              Dashboard
+            </Link>
+          )}
+          {!authenticated && (
+            <Link href="/login" className={linkClass("/login")}>
+              Login
+            </Link>
+          )}
+          {!authenticated && (
+            <Link href="/signin" className={linkClass("/signin")}>
+              Sign Up
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
