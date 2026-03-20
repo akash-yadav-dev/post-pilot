@@ -4,6 +4,8 @@ const THEME_STORAGE_KEY = "postpilot-theme";
 
 export const ThemeService = {
   getStoredTheme(): ThemeMode | null {
+    if (typeof window === "undefined") return null;
+
     const value = localStorage.getItem(THEME_STORAGE_KEY);
     return value === "dark" || value === "light" ? value : null;
   },
