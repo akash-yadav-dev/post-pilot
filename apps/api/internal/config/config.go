@@ -30,6 +30,8 @@ type Config struct {
 	AuthRefreshRateLimitMax    int
 
 	AppBaseURL string
+
+	GoogleOAuthClientID string
 }
 
 func LoadConfig() (*Config, error) {
@@ -95,6 +97,8 @@ func LoadConfig() (*Config, error) {
 		AuthRefreshRateLimitMax:    refreshRateLimitMax,
 
 		AppBaseURL: getEnv("APP_BASE_URL", "http://localhost:8080"),
+
+		GoogleOAuthClientID: getEnv("GOOGLE_OAUTH_CLIENT_ID", ""),
 	}
 
 	if err := cfg.Validate(); err != nil {

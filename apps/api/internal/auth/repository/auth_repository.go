@@ -77,6 +77,96 @@ func (r *AuthRepository) CreateUserWithPassword(ctx context.Context, name, email
 	return user, nil
 }
 
+func (r *AuthRepository) FindUserByProviderIdentity(ctx context.Context, provider, providerUserID string) (*model.User, error) {
+	query := `
+		SELECT u.id, u.email, u.name
+		FROM users u
+		INNER JOIN auth_accounts a ON a.user_id = u.id
+		WHERE a.provider = $1
+			AND a.provider_user_id = $2
+			AND u.deleted_at IS NULL
+			AND u.status = 'active'
+	`
+
+	user := &model.User{}
+	err := r.db.QueryRowContext(ctx, query, provider, providerUserID).Scan(&user.ID, &user.Email, &user.Name)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *AuthRepository) CreateOrLinkGoogleUser(ctx context.Context, name, email, providerUserID string, emailVerified bool) (*model.User, error) {
+	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	user := &model.User{}
+	findByEmailQuery := `
+		SELECT id, email, name
+		FROM users
+		WHERE email = $1
+			AND deleted_at IS NULL
+		LIMIT 1
+	`
+
+	err = tx.QueryRowContext(ctx, findByEmailQuery, email).Scan(&user.ID, &user.Email, &user.Name)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+
+		createUserQuery := `
+			INSERT INTO users (email, name, email_verified_at)
+			VALUES ($1, $2, CASE WHEN $3 THEN NOW() ELSE NULL END)
+			RETURNING id, email, name
+		`
+		if err := tx.QueryRowContext(ctx, createUserQuery, email, name, emailVerified).Scan(&user.ID, &user.Email, &user.Name); err != nil {
+			if isUniqueViolation(err) {
+				return nil, ErrEmailAlreadyExists
+			}
+			return nil, err
+		}
+	}
+
+	upsertAuthQuery := `
+		INSERT INTO auth_accounts (user_id, provider, provider_user_id)
+		VALUES ($1, 'google', $2)
+		ON CONFLICT (provider, provider_user_id)
+		DO UPDATE SET user_id = EXCLUDED.user_id, updated_at = NOW()
+	`
+
+	if _, err := tx.ExecContext(ctx, upsertAuthQuery, user.ID, providerUserID); err != nil {
+		return nil, err
+	}
+
+	if emailVerified {
+		markVerifiedQuery := `
+			UPDATE users
+			SET email_verified_at = COALESCE(email_verified_at, NOW())
+			WHERE id = $1
+		`
+		if _, err := tx.ExecContext(ctx, markVerifiedQuery, user.ID); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *AuthRepository) GetPasswordIdentityByEmail(ctx context.Context, email string) (*model.PasswordAuthIdentity, error) {
 	query := `
 		SELECT

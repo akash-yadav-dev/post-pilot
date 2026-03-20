@@ -11,6 +11,10 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required,min=1,max=72"`
 }
 
+type GoogleLoginRequest struct {
+	IDToken string `json:"id_token" binding:"required,min=1"`
+}
+
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }

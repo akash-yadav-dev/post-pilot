@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, Leckerli_One } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+
+export const leckerliOne = Leckerli_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-leckerli-one", 
+});
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -11,29 +17,44 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "PostPilot",
+  title: "PostPilot - Social scheduling command center",
   description: "Social scheduling command center",
+
+  // Favicon + Icons
+  icons: {
+    icon: [
+      { url: "./favicon/favicon.ico" }, // fallback (important)
+      { url: "./favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "./favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "./favicon/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "./favicon/favicon.ico",
+  },
+
+  // PWA support
+  manifest: "./favicon/site.webmanifest",
 };
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-  }) {
+}) {
   const initialThemeScript = `(function() {
-        try {
-          const key = "postpilot-theme";
-          const stored = localStorage.getItem(key);
-          const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          const theme = stored || (systemDark ? "dark" : "light");
+    try {
+      const key = "postpilot-theme";
+      const stored = localStorage.getItem(key);
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = stored || (systemDark ? "dark" : "light");
 
-          if (theme === "dark") {
-            document.documentElement.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-          }
-        } catch (e) {}
-      })()`;
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    } catch (e) {}
+  })()`;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -45,7 +66,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={`${spaceGrotesk.variable} antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${leckerliOne.variable} antialiased`}>
         <ThemeProvider>
           <div className="min-h-screen bg-[var(--bg)] text-[var(--primary)]">
             <SiteHeader />

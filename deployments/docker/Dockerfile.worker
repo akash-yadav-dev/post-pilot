@@ -1,0 +1,7 @@
+FROM golang:1.26-alpine
+
+RUN apk add --no-cache bash git build-base
+
+WORKDIR /workspace
+
+CMD ["go", "run", "./apps/worker/cmd/worker"]

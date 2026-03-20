@@ -138,6 +138,61 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	var req model.GoogleLoginRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.auditEvent(c, model.AuditEvent{
+			ActorType:    "anonymous",
+			Action:       "auth.google_login",
+			ResourceType: "session",
+			Succeeded:    false,
+			ErrorMessage: "invalid google login payload",
+		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid google login payload"})
+		return
+	}
+
+	resp, err := h.service.LoginWithGoogle(c.Request.Context(), req)
+	if err != nil {
+		status := http.StatusInternalServerError
+		message := "google login failed"
+
+		switch {
+		case errors.Is(err, service.ErrInvalidGoogleToken):
+			status = http.StatusUnauthorized
+			message = err.Error()
+		case errors.Is(err, service.ErrGoogleAuthDisabled):
+			status = http.StatusNotImplemented
+			message = err.Error()
+		}
+
+		h.auditEvent(c, model.AuditEvent{
+			ActorType:    "anonymous",
+			Action:       "auth.google_login",
+			ResourceType: "session",
+			Succeeded:    false,
+			ErrorMessage: message,
+		})
+
+		c.JSON(status, gin.H{"error": message})
+		return
+	}
+
+	userID := resp.UserID
+	h.auditEvent(c, model.AuditEvent{
+		UserID:       &userID,
+		ActorType:    "user",
+		Action:       "auth.google_login",
+		ResourceType: "session",
+		ResourceID:   &userID,
+		Metadata:     map[string]any{"email": resp.Email, "provider": "google"},
+		Succeeded:    true,
+	})
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req model.RefreshTokenRequest
 

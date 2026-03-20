@@ -19,12 +19,15 @@ var (
 	ErrEmailAlreadyRegistered = errors.New("email already registered")
 	ErrAccountLocked          = errors.New("account is temporarily locked")
 	ErrUserNotFound           = errors.New("user not found")
+	ErrInvalidGoogleToken     = errors.New("invalid google token")
+	ErrGoogleAuthDisabled     = errors.New("google auth is not configured")
 )
 
 type AuthService struct {
 	repo           AuthRepository
 	passwordSvc    *security.PasswordService
 	jwtSvc         *security.JWTService
+	googleVerifier GoogleTokenVerifier
 	accessTokenTTL time.Duration
 }
 
@@ -32,12 +35,14 @@ func NewAuthService(
 	repo AuthRepository,
 	passwordSvc *security.PasswordService,
 	jwtSvc *security.JWTService,
+	googleVerifier GoogleTokenVerifier,
 	accessTokenTTL time.Duration,
 ) *AuthService {
 	return &AuthService{
 		repo:           repo,
 		passwordSvc:    passwordSvc,
 		jwtSvc:         jwtSvc,
+		googleVerifier: googleVerifier,
 		accessTokenTTL: accessTokenTTL,
 	}
 }
@@ -106,6 +111,47 @@ func (s *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 		ID:    identity.ID,
 		Name:  identity.Name,
 		Email: identity.Email,
+	}
+
+	return s.buildAuthResponse(ctx, user)
+}
+
+func (s *AuthService) LoginWithGoogle(ctx context.Context, req model.GoogleLoginRequest) (*model.AuthResponse, error) {
+	if s.googleVerifier == nil {
+		return nil, ErrGoogleAuthDisabled
+	}
+
+	identity, err := s.googleVerifier.Verify(ctx, req.IDToken)
+	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "not configured") {
+			return nil, ErrGoogleAuthDisabled
+		}
+		return nil, ErrInvalidGoogleToken
+	}
+
+	user, err := s.repo.FindUserByProviderIdentity(ctx, "google", identity.Subject)
+	if err != nil {
+		if !errors.Is(err, repository.ErrNotFound) {
+			return nil, err
+		}
+
+		user, err = s.repo.CreateOrLinkGoogleUser(
+			ctx,
+			identity.Name,
+			normalizeEmail(identity.Email),
+			identity.Subject,
+			identity.EmailVerified,
+		)
+		if err != nil {
+			if errors.Is(err, repository.ErrEmailAlreadyExists) {
+				return nil, ErrEmailAlreadyRegistered
+			}
+			return nil, err
+		}
+	}
+
+	if err := s.repo.UpdateLastLogin(ctx, user.ID); err != nil {
+		return nil, err
 	}
 
 	return s.buildAuthResponse(ctx, user)

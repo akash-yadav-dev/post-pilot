@@ -128,7 +128,7 @@ func (h *Handler) DeletePost(c *gin.Context) {
 
 // userIDFromContext extracts the authenticated user's UUID from the Gin context (set by auth middleware).
 func userIDFromContext(c *gin.Context) (uuid.UUID, bool) {
-	raw, exists := c.Get("user_id")
+	raw, exists := c.Get("auth_user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return uuid.Nil, false

@@ -51,6 +51,7 @@ func NewModule(db *sql.DB, cfg *config.Config, cacheSvc *rediscache.CacheService
 		authRepo,
 		passwordSvc,
 		jwtSvc,
+		service.NewGoogleIDTokenVerifier(cfg.GoogleOAuthClientID),
 		time.Duration(cfg.JWTExpiry)*time.Second,
 	)
 

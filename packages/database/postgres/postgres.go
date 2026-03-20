@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 type DB struct {
@@ -21,11 +23,11 @@ type DBConfig struct {
 
 func NewPostgresDB() (*DB, error) {
 	conn := NewConnection(
-		getEnv("DB_HOST", "localhost"),
+		getEnv("DB_HOST", "postgres"),
 		getEnv("DB_PORT", "5432"),
 		getEnv("DB_USER", "postgres"),
 		getEnv("DB_PASSWORD", "postgres"),
-		getEnv("DB_NAME", "app_db"),
+		getEnv("DB_NAME", "post_pilot"),
 	)
 
 	cfg := DBConfig{
