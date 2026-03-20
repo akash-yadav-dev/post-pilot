@@ -12,12 +12,12 @@ import (
 
 var ErrSocialNotFound = errors.New("social record not found")
 
-type accountRow struct {
-	SocialAccount
-	AccessToken  string
-	RefreshToken string
-	Metadata     string
-}
+// type accountRow struct {
+// 	SocialAccount
+// 	AccessToken  string
+// 	RefreshToken string
+// 	Metadata     string
+// }
 
 type publishTarget struct {
 	TargetID         uuid.UUID
