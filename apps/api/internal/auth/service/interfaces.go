@@ -9,6 +9,8 @@ import (
 
 type AuthRepository interface {
 	CreateUserWithPassword(ctx context.Context, name, email, passwordHash string) (*model.User, error)
+	FindUserByProviderIdentity(ctx context.Context, provider, providerUserID string) (*model.User, error)
+	CreateOrLinkGoogleUser(ctx context.Context, name, email, providerUserID string, emailVerified bool) (*model.User, error)
 	GetPasswordIdentityByEmail(ctx context.Context, email string) (*model.PasswordAuthIdentity, error)
 	GetUserByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
 	RecordFailedLogin(ctx context.Context, userID uuid.UUID) error

@@ -23,6 +23,12 @@ export const ThemeService = {
     root.classList.toggle("dark", theme === "dark");
   },
 
+  clearStoredTheme() {
+    if (typeof window === "undefined") return;
+
+    localStorage.removeItem(THEME_STORAGE_KEY);
+  },
+
   setTheme(theme: ThemeMode) {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     this.applyTheme(theme);

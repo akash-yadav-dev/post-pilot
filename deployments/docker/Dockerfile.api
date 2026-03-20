@@ -1,0 +1,9 @@
+FROM golang:1.26-alpine
+
+RUN apk add --no-cache bash git build-base
+
+WORKDIR /workspace
+
+RUN go install github.com/air-verse/air@v1.63.0
+
+CMD ["air", "-c", "deployments/docker/.air.api.toml"]

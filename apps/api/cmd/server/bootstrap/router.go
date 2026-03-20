@@ -6,6 +6,7 @@ import (
 	"post-pilot/apps/api/internal/auth"
 	"post-pilot/apps/api/internal/middleware"
 	"post-pilot/apps/api/internal/posts"
+	"post-pilot/apps/api/internal/socialapp"
 	"post-pilot/apps/api/internal/users"
 	"post-pilot/apps/api/routes"
 	rediscache "post-pilot/packages/cache/redis"
@@ -46,10 +47,12 @@ func SetupRouter(container *Container) (*gin.Engine, error) {
 
 	usersModule := users.NewModule(container.DB.DB)
 	postsModule := posts.NewModule(container.DB.DB)
+	socialModule := socialapp.NewModule(container.DB.DB)
 
 	routes.SetupAuthRouter(router, authModule)
 	routes.SetupUserRouter(router, usersModule, authModule.AuthRequired)
 	routes.SetupPostRouter(router, postsModule, authModule.AuthRequired)
+	routes.SetupSocialRouter(router, socialModule, authModule.AuthRequired)
 
 	return router, nil
 }

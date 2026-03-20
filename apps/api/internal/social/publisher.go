@@ -19,6 +19,9 @@ type PublishRequest struct {
 
 	// AccessTokenSecret is required by OAuth 1.0a platforms (e.g. Twitter v1.1).
 	AccessTokenSecret string
+
+	// Metadata carries platform-specific context (e.g. mastodon server URL, bluesky handle).
+	Metadata map[string]any
 }
 
 // PublishResult is the outcome of a successful publish operation.

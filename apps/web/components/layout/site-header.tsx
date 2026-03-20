@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AuthService } from "@/services/auth-service";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const authenticated = AuthService.isAuthenticated();
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setAuthenticated(AuthService.isAuthenticated());
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const linkClass = (path: string) =>
     `rounded-full px-4 py-2 text-sm font-medium transition ${
@@ -22,7 +31,9 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="group flex items-center gap-2">
           <span className="group inline-flex items-center justify-center h-7 w-7 rotate-45 rounded-md bg-[var(--icon-bg)] transition-transform duration-300 ease-in-out group-hover:rotate-[405deg]">
-            <span className="-rotate-45 text-[var(--icon-text)] text-sm font-semibold">
+            <span
+              className="-rotate-45 text-[var(--icon-text)] text-sm font-semibold [font-family:var(--font-leckerli-one)]"
+            >
               P
             </span>
           </span>
@@ -59,6 +70,7 @@ export function SiteHeader() {
               type="button"
               onClick={async () => {
                 await AuthService.logout();
+                setAuthenticated(false);
                 router.push("/");
               }}
               className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)] transition hover:bg-[var(--primary)] hover:text-[var(--bg)]"

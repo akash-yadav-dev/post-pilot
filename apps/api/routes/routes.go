@@ -3,6 +3,7 @@ package routes
 import (
 	"post-pilot/apps/api/internal/auth"
 	"post-pilot/apps/api/internal/posts"
+	"post-pilot/apps/api/internal/socialapp"
 	"post-pilot/apps/api/internal/users"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ func SetupAuthRouter(router *gin.Engine, module *auth.Module) *gin.Engine {
 	{
 		authGroup.POST("/register", module.RegisterRateLimit, module.Handler.Register)
 		authGroup.POST("/login", module.LoginIdentity, module.LoginRateLimit, module.LoginEmailLimit, module.Handler.Login)
+		authGroup.POST("/google", module.LoginRateLimit, module.Handler.GoogleLogin)
 		authGroup.POST("/refresh", module.RefreshRateLimit, module.Handler.Refresh)
 		authGroup.POST("/logout", module.Handler.Logout)
 	}
@@ -48,5 +50,19 @@ func SetupPostRouter(router *gin.Engine, module *posts.Module, authMiddleware gi
 		postGroup.PATCH("/:id", module.Handler.UpdatePost)
 		postGroup.DELETE("/:id", module.Handler.DeletePost)
 	}
+	return router
+}
+
+func SetupSocialRouter(router *gin.Engine, module *socialapp.Module, authMiddleware gin.HandlerFunc) *gin.Engine {
+	socialGroup := router.Group("/api/v1/social")
+	socialGroup.Use(authMiddleware)
+	{
+		socialGroup.POST("/accounts", module.Handler.ConnectAccount)
+		socialGroup.GET("/accounts", module.Handler.ListAccounts)
+		socialGroup.DELETE("/accounts/:id", module.Handler.DeleteAccount)
+
+		socialGroup.POST("/posts/:postId/publish", module.Handler.PublishPost)
+	}
+
 	return router
 }
