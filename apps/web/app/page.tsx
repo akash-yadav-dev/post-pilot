@@ -12,7 +12,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/signin"
+              href="/signup"
               className="rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--bg)] transition hover:-translate-y-0.5"
             >
               Start Free

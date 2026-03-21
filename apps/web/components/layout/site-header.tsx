@@ -57,7 +57,7 @@ export function SiteHeader() {
             </Link>
           )}
           {!authenticated && (
-            <Link href="/signin" className={linkClass("/signin")}>
+            <Link href="/signup" className={linkClass("/signup")}>
               Sign Up
             </Link>
           )}

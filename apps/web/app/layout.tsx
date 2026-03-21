@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Leckerli_One } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
+import ClientLayoutShell from "@/components/layout/client-layout-shell";
 
 export const leckerliOne = Leckerli_One({
   subsets: ["latin"],
@@ -66,14 +64,10 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={`${spaceGrotesk.variable} ${leckerliOne.variable} antialiased`}>
-        <ThemeProvider>
-          <div className="min-h-screen bg-[var(--bg)] text-[var(--primary)]">
-            <SiteHeader />
-            <main>{children}</main>
-            <SiteFooter />
-          </div>
-        </ThemeProvider>
+      <body
+        className={`${spaceGrotesk.variable} ${leckerliOne.variable} antialiased`}
+      >
+        <ClientLayoutShell>{children}</ClientLayoutShell>
       </body>
     </html>
   );
